@@ -95,7 +95,7 @@ apt update -y && apt upgrade -y
 sudo timedatectl set-timezone Asia/Shanghai
 
 # 安装必要的软件包
-apt install sudo curl wget nano vim socat unzip bash iptables ipset fail2ban ufw knockd -y
+apt install sudo curl wget nano vim socat unzip bash iptables ipset fail2ban ufw knockd cron -y
 
 # 随机生成 SSH 端口，从 10000 开始
 RANDOM_PORT=$((RANDOM % (65535 - 10000 + 1) + 10000))  # 生成一个10000到65535之间的随机端口
@@ -246,23 +246,49 @@ chmod +x swap.sh
 clear
 ./swap.sh
 
-# 安装 Docker，判断地区
-echo "正在检测 VPS IP 地址..."
-PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
-REGION=$(curl -s https://ipinfo.io/${PUBLIC_IP}/country)
+# 检测系统内存大小
+echo "正在检测系统的内存大小..."
+TOTAL_MEMORY=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
+# 转换为 MB（因为 /proc/meminfo 单位是 KB）
+TOTAL_MEMORY_MB=$((TOTAL_MEMORY / 1024))
+echo "当前系统总内存大小为：${TOTAL_MEMORY_MB} MB"
 
-if [[ "$REGION" == "CN" ]]; then
-    echo "检测到中国大陆地区，正在从国内源安装 Docker..."
-    curl https://install.1panel.live/docker-install -o docker-install
-    sudo bash ./docker-install
-    rm -f ./docker-install
+# 基于内存大小给出建议
+if [[ "$TOTAL_MEMORY_MB" -lt 512 ]]; then
+    echo "检测到系统内存较小（小于 512MB），建议不要安装 Docker，以免导致性能问题。"
+elif [[ "$TOTAL_MEMORY_MB" -lt 1024 ]]; then
+    echo "检测到系统内存低（小于 1024MB），安装 Docker 后可能会影响系统性能，请谨慎选择。"
 else
-    echo "检测到国外地区，正在从国外源安装 Docker..."
-    wget -qO- get.docker.com | bash
+    echo "系统内存充足，可以安装 Docker。"
 fi
 
-# 启用 Docker 服务
-sudo systemctl enable docker
+# 提示用户是否安装 Docker
+read -p "您是否要安装 Docker？（输入 y 表示安装，输入 n 表示跳过）： " INSTALL_DOCKER_CHOICE
+
+if [[ "$INSTALL_DOCKER_CHOICE" == "y" ]]; then
+    # 安装 Docker，判断地区
+    echo "正在检测 VPS IP 地址..."
+    PUBLIC_IP=$(curl -s http://checkip.amazonaws.com)
+    REGION=$(curl -s https://ipinfo.io/${PUBLIC_IP}/country)
+
+    if [[ "$REGION" == "CN" ]]; then
+        echo "检测到中国大陆地区，正在从国内源安装 Docker..."
+        curl https://install.1panel.live/docker-install -o docker-install
+        sudo bash ./docker-install
+        rm -f ./docker-install
+    else
+        echo "检测到国外地区，正在从国外源安装 Docker..."
+        wget -qO- get.docker.com | bash
+    fi
+
+    # 启用 Docker 服务
+    sudo systemctl enable docker
+    echo "Docker 安装完成并已启用服务！"
+else
+    echo "跳过 Docker 安装逻辑。"
+fi
+
+echo "继续执行脚本的其他操作..."
 
 # 添加 哪吒探针 监控脚本
 echo "正在下载和执行 哪吒探针 监控脚本..."
@@ -289,11 +315,25 @@ if [[ "$NEZHA_CHOICE" == "y" ]]; then
         echo "配置文件中未找到 UUID 项。"
     fi
     
+    # 询问是否启用 IPv6 验证国家属地
+    read -p "是否需要启用通过 IPv6 验证国家属地？（输入 y 表示启用，输入 n 表示跳过）： " IPV6_COUNTRY_CHOICE
+    if [[ "$IPV6_COUNTRY_CHOICE" == "y" ]]; then
+        if grep -q 'use_ipv6_country_code:' "$CONFIG_FILE"; then
+            sudo sed -i "s/use_ipv6_country_code:.*/use_ipv6_country_code: true/" "$CONFIG_FILE"
+            echo "已启用通过 IPv6 验证国家属地。"
+        else
+            echo "配置文件中未找到 use_ipv6_country_code 项，无法修改。"
+        fi
+    else
+        echo "跳过启用通过 IPv6 验证国家属地。"
+    fi
+
     # 启动哪吒探针服务
     sudo systemctl start nezha-agent
 else
     echo "未安装哪吒探针，无需处理。"
 fi
+
 
 # 添加 IP 黑名单
 echo "正在下载和执行 IP 黑名单脚本..."
