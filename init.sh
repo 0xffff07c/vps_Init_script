@@ -40,29 +40,30 @@ else
         echo "该 VPS 支持 IPv4 和 IPv6，继续安装。"
     fi
 fi
+# 检测虚拟机类型
+if command -v systemd-detect-virt &> /dev/null; then
+    VM_TYPE=$(systemd-detect-virt)
+else
+    echo "未检测到 systemd-detect-virt 命令，采用其他方式检测。"
 
- #检测虚拟机类型
- if command -v systemd-detect-virt &> /dev/null; then
-     VM_TYPE=$(systemd-detect-virt)
- else
-     echo "未检测到 systemd-detect-virt 命令，采用其他方式检测。"
- # 提示用户是否进行重装
- read -p "您需要重装系统吗？（输入 y 进行重装，输入 n 跳过）： " REINSTALL_CHOICE
- if [[ "$REINSTALL_CHOICE" == "y" ]]; then
-     echo "开始重装系统..."
- 
-     # 检测虚拟机类型
-     if grep -E -q 'openvz' /proc/version; then
-         VM_TYPE="openvz"
-     elif grep -E -q 'lxc' /proc/self/cgroup; then
-         VM_TYPE="lxc"
-     else
-         VM_TYPE="none"
-     fi
- fi
- 
- echo "检测到虚拟机类型：$VM_TYPE"
- 
+    # 提示用户是否进行重装
+    read -p "您需要重装系统吗？（输入 y 进行重装，输入 n 跳过）： " REINSTALL_CHOICE
+    if [[ "$REINSTALL_CHOICE" == "y" ]]; then
+        echo "开始重装系统..."
+        
+        # 检测虚拟机类型
+        if grep -E -q 'openvz' /proc/version; then
+            VM_TYPE="openvz"
+        elif grep -E -q 'lxc' /proc/self/cgroup; then
+            VM_TYPE="lxc"
+        else
+            VM_TYPE="none"
+        fi
+    fi
+fi
+
+echo "检测到虚拟机类型：$VM_TYPE"
+
 
 # 提示用户是否进行重装
 read -p "您需要重装系统吗？（输入 y 进行重装，输入 n 跳过）： " REINSTALL_CHOICE
