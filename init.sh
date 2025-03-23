@@ -41,7 +41,7 @@ else
     fi
 fi
 
- 检测虚拟机类型
+ #检测虚拟机类型
  if command -v systemd-detect-virt &> /dev/null; then
      VM_TYPE=$(systemd-detect-virt)
  else
