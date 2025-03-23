@@ -224,6 +224,10 @@ echo "# 禁止密码登录" | sudo tee -a $SSHD_CONFIG_FILE
 echo "PasswordAuthentication no" | sudo tee -a $SSHD_CONFIG_FILE
 echo "ChallengeResponseAuthentication no" | sudo tee -a $SSHD_CONFIG_FILE
 
+# 运行优化脚本
+wget https://gist.githubusercontent.com/taurusxin/a9fc3ad039c44ab66fca0320045719b0/raw/3906efed227ee14fc5b4ac8eb4eea8855021ef19/optimize.sh
+sudo bash optimize.sh
+
 # 安装优化工具
 bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -t
 # 检测虚拟机类型
@@ -249,14 +253,10 @@ fi
 echo "其他脚本操作继续进行..."
 
 
-# 运行优化脚本
-wget https://gist.githubusercontent.com/taurusxin/a9fc3ad039c44ab66fca0320045719b0/raw/3906efed227ee14fc5b4ac8eb4eea8855021ef19/optimize.sh
-sudo bash optimize.sh
-
-# 安装 TCP 加速脚本
-wget -O tcpx.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcpx.sh"
-chmod +x tcpx.sh
-./tcpx.sh
+# # 安装 TCP 加速脚本
+# wget -O tcpx.sh "https://github.com/ylx2016/Linux-NetSpeed/raw/master/tcpx.sh"
+# chmod +x tcpx.sh
+# ./tcpx.sh
 
 # 安装交换空间脚本
 wget -O swap.sh https://raw.githubusercontent.com/yuju520/Script/main/swap.sh
