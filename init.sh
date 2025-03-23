@@ -81,7 +81,20 @@ if [[ "$REINSTALL_CHOICE" == "y" ]]; then
         # 执行重装脚本
         curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh $_
         chmod +x reinstall.sh
-        ./reinstall.sh debian 11 || echo "重装脚本执行失败，继续执行其他操作..."
+        ./reinstall.sh debian 11
+        if [[ $? -eq 0 ]]; then
+            echo "重装脚本执行成功！"
+            read -p "是否立即重启 VPS？（输入 y 进行重启，输入 n 取消）： " REBOOT_CHOICE
+            if [[ "$REBOOT_CHOICE" == "y" ]]; then
+                echo "正在重启系统..."
+                reboot
+            else
+                echo "您选择跳过重启，继续其他操作..."
+            fi
+        else
+            echo "重装脚本执行失败，继续执行其他操作..."
+        fi
+        # ./reinstall.sh debian 11 || echo "重装脚本执行失败，继续执行其他操作..."
     fi
 else
     echo "跳过重装步骤。"
