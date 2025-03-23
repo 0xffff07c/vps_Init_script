@@ -95,7 +95,7 @@ apt update -y && apt upgrade -y
 sudo timedatectl set-timezone Asia/Shanghai
 
 # 安装必要的软件包
-apt install sudo curl wget nano vim socat unzip bash iptables ipset fail2ban ufw knockd cron -y
+apt install sudo curl wget nano vim socat unzip bash iptables ipset fail2ban ufw knockd cron netcat -y
 
 # 随机生成 SSH 端口，从 10000 开始
 RANDOM_PORT=$((RANDOM % (65535 - 10000 + 1) + 10000))  # 生成一个10000到65535之间的随机端口
