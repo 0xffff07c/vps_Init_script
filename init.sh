@@ -32,17 +32,25 @@ else
     fi
 fi
 
+# 检测虚拟机类型
+if grep -E -q 'openvz' /proc/version; then
+    VM_TYPE="openvz"
+elif grep -E -q 'lxc' /proc/self/cgroup; then
+    VM_TYPE="lxc"
+else
+    VM_TYPE="none"
+fi
+
+echo "检测到虚拟机类型：$VM_TYPE"
+
 # 提示用户是否进行重装
 read -p "您需要重装系统吗？（输入 y 进行重装，输入 n 跳过）： " REINSTALL_CHOICE
 if [[ "$REINSTALL_CHOICE" == "y" ]]; then
     echo "开始重装系统..."
 
-    # 检测虚拟机类型
-    VM_TYPE=$(grep -E -o 'openvz|lxc' /proc/version)
-
     # 根据虚拟机类型执行相应操作
     if [[ "$VM_TYPE" == "openvz" ]] || [[ "$VM_TYPE" == "lxc" ]]; then
-        echo "检测到虚拟机类型：$VM_TYPE。正在执行 OsMutation 脚本..."
+        echo "检测到虚拟机类型：$VM_TYPE，正在执行 OsMutation 脚本..."
         curl -so OsMutation.sh https://raw.githubusercontent.com/LloydAsp/OsMutation/main/OsMutation.sh
         chmod u+x OsMutation.sh
         ./OsMutation.sh
