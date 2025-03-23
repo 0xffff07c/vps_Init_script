@@ -33,12 +33,17 @@ else
 fi
 
 # 检测虚拟机类型
-if grep -E -q 'openvz' /proc/version; then
-    VM_TYPE="openvz"
-elif grep -E -q 'lxc' /proc/self/cgroup; then
-    VM_TYPE="lxc"
+if command -v systemd-detect-virt &> /dev/null; then
+    VM_TYPE=$(systemd-detect-virt)
 else
-    VM_TYPE="none"
+    echo "未检测到 systemd-detect-virt 命令，采用其他方式检测。"
+    if grep -E -q 'openvz' /proc/version; then
+        VM_TYPE="openvz"
+    elif grep -E -q 'lxc' /proc/self/cgroup; then
+        VM_TYPE="lxc"
+    else
+        VM_TYPE="none"
+    fi
 fi
 
 echo "检测到虚拟机类型：$VM_TYPE"
@@ -53,13 +58,13 @@ if [[ "$REINSTALL_CHOICE" == "y" ]]; then
         echo "检测到虚拟机类型：$VM_TYPE，正在执行 OsMutation 脚本..."
         curl -so OsMutation.sh https://raw.githubusercontent.com/LloydAsp/OsMutation/main/OsMutation.sh
         chmod u+x OsMutation.sh
-        ./OsMutation.sh
+        ./OsMutation.sh || echo "OsMutation 脚本执行失败，继续执行其他操作..."
     else
         echo "未检测到 OpenVZ 或 LXC 虚拟机，直接执行重装脚本..."
         # 执行重装脚本
         curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh $_
         chmod +x reinstall.sh
-        ./reinstall.sh debian 11
+        ./reinstall.sh debian 11 || echo "重装脚本执行失败，继续执行其他操作..."
     fi
 else
     echo "跳过重装步骤。"
