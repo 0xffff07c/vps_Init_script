@@ -15,6 +15,11 @@ else
     # 仅支持 IPv4
     if [[ "$IPV4" == "yes" && "$IPV6" == "no" ]]; then
         echo "该 VPS 仅支持 IPv4。"
+        read -p "您是否需要开启 Warp 支持？（输入 y 进行开启，输入 n 跳过）： " WARP_CHOICE
+        if [[ "$WARP_CHOICE" == "y" ]]; then
+            echo "正在开启 Warp 支持（参数: 4）..."
+            wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh 4 || echo "开启 Warp 支持失败，继续执行其他操作..."
+        fi
     # 仅支持 IPv6
     elif [[ "$IPV4" == "no" && "$IPV6" == "yes" ]]; then
         echo "该 VPS 仅支持 IPv6。"
@@ -23,8 +28,12 @@ else
             echo "正在添加 DNS64..."
             echo -e "nameserver 2606:4700:4700::64\nnameserver 2606:4700:4700::6400" | sudo tee /etc/resolv.conf > /dev/null
             echo "DNS64 添加完成，请确认 DNS 设置生效。"
-        else
-            echo "跳过 DNS64 添加。"
+        fi
+
+        read -p "您是否需要开启 Warp 支持？（输入 y 进行开启，输入 n 跳过）： " WARP_CHOICE
+        if [[ "$WARP_CHOICE" == "y" ]]; then
+            echo "正在开启 Warp 支持（参数: 6）..."
+            wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh 6 || echo "开启 Warp 支持失败，继续执行其他操作..."
         fi
     # 支持 IPv4 和 IPv6
     else
@@ -32,21 +41,20 @@ else
     fi
 fi
 
+# 检测虚拟机类型
+VM_TYPE="none"
+if grep -E -q 'openvz' /proc/version; then
+    VM_TYPE="openvz"
+elif grep -E -q 'lxc' /proc/self/cgroup; then
+    VM_TYPE="lxc"
+fi
+
+echo "检测到虚拟机类型：$VM_TYPE"
+
 # 提示用户是否进行重装
 read -p "您需要重装系统吗？（输入 y 进行重装，输入 n 跳过）： " REINSTALL_CHOICE
 if [[ "$REINSTALL_CHOICE" == "y" ]]; then
     echo "开始重装系统..."
-
-    # 检测虚拟机类型
-    if grep -E -q 'openvz' /proc/version; then
-        VM_TYPE="openvz"
-    elif grep -E -q 'lxc' /proc/self/cgroup; then
-        VM_TYPE="lxc"
-    else
-        VM_TYPE="none"
-    fi
-
-    echo "检测到虚拟机类型：$VM_TYPE"
 
     # 根据虚拟机类型执行相应操作
     if [[ "$VM_TYPE" == "openvz" ]] || [[ "$VM_TYPE" == "lxc" ]]; then
@@ -65,6 +73,16 @@ else
     echo "跳过重装步骤。"
 fi
 
+# 更新和升级系统
+echo "正在更新和升级系统..."
+apt update -y && apt upgrade -y
+
+# 设置时区
+sudo timedatectl set-timezone Asia/Shanghai
+
+# 安装必要的软件包
+apt install sudo curl wget nano vim socat unzip bash iptables ipset fail2ban ufw knockd -y
+
 # 随机生成 SSH 端口，从 10000 开始
 RANDOM_PORT=$((RANDOM % (65535 - 10000 + 1) + 10000))  # 生成一个10000到65535之间的随机端口
 echo "生成的 SSH 端口为：$RANDOM_PORT"
@@ -73,19 +91,6 @@ echo "生成的 SSH 端口为：$RANDOM_PORT"
 SSHD_CONFIG_FILE="/etc/ssh/sshd_config"
 echo "正在更新 SSH 配置为端口 $RANDOM_PORT..."
 sudo sed -i "s/^#\?Port 22.*/Port $RANDOM_PORT/g" $SSHD_CONFIG_FILE
-
-# 配置 UFW 允许新 SSH 端口
-echo "正在允许 UFW 通过 TCP 访问端口 $RANDOM_PORT..."
-sudo ufw allow $RANDOM_PORT/tcp
-
-# 确保启用 UFW
-if [ "$(sudo ufw status | grep 'Status: inactive')" ]; then
-    echo "启用 UFW..."
-    sudo ufw enable
-else
-    echo "重新加载 UFW..."
-    sudo ufw reload
-fi
 
 # 检查并创建 /var/log/secure 文件
 LOGFILE="/var/log/secure"
@@ -96,6 +101,74 @@ if [ ! -f "$LOGFILE" ]; then
     echo "$LOGFILE 文件已创建."
 fi
 
+# 配置 UFW 允许新 SSH 端口
+echo "正在允许 UFW 通过 TCP 访问端口 $RANDOM_PORT..."
+sudo ufw allow $RANDOM_PORT/tcp
+
+# 随机生成敲门次数，允许范围为 3 至 5
+KNOCK_COUNT=$((RANDOM % 3 + 3))  # 生成 3 至 5 的随机数
+KNOCK_PORTS=()
+
+# 动态生成敲门所需的端口
+for ((i = 1; i <= KNOCK_COUNT; i++)); do
+    KNOCK_PORTS+=($((RANDOM % (65535 - 10000 + 1) + 10000)))
+done
+
+# 动态生成敲门序列
+KNOCKD_SEQUENCE_OPEN=$(IFS=,; echo "${KNOCK_PORTS[*]}")  # 敲门开启序列
+KNOCKD_SEQUENCE_CLOSE=$(IFS=,; echo "${KNOCK_PORTS[*]}" | awk -F, '{for(i=NF; i>=1; i--) printf $i (i>1?",":"")}')  # 敲门关闭序列
+
+# 输出敲门配置到终端
+echo "敲门配置生成成功，请记录以下详细信息："
+echo "敲门次数: $KNOCK_COUNT"
+echo "敲门开启序列: $KNOCKD_SEQUENCE_OPEN"
+echo "敲门关闭序列: $KNOCKD_SEQUENCE_CLOSE"
+echo "敲门所需端口: ${KNOCK_PORTS[*]}"
+echo "敲门配置将在自动写入 knockd 的配置文件中。"
+read -p "按下 [Enter] 键确认已记录所有信息，继续执行下一步..."
+
+# 配置 UFW 允许敲门所需的端口
+echo "正在允许 UFW 放行敲门所需的端口..."
+for PORT in "${KNOCK_PORTS[@]}"; do
+    sudo ufw allow $PORT/tcp
+done
+
+# 检查 UFW 状态并应用规则
+UFW_STATUS=$(sudo ufw status | grep "Status:" | awk '{print $2}')
+if [[ "$UFW_STATUS" == "inactive" ]]; then
+    echo "UFW 当前未激活，正在启用 UFW..."
+    sudo ufw enable
+else
+    echo "UFW 当前已激活，正在重载 UFW..."
+    sudo ufw reload
+fi
+
+# 写入 knockd 配置文件
+echo "正在配置 knockd 服务..."
+sudo bash -c "cat <<EOL > /etc/knockd.conf
+[openSSH]
+    sequence = $KNOCKD_SEQUENCE_OPEN
+    seq_timeout = 5
+    command = /usr/bin/iptables -A INPUT -p tcp --dport $RANDOM_PORT -j ACCEPT
+    command_wait = 10
+    timeout = 30
+
+[closeSSH]
+    sequence = $KNOCKD_SEQUENCE_CLOSE
+    seq_timeout = 5
+    command = /usr/bin/iptables -D INPUT -p tcp --dport $RANDOM_PORT -j ACCEPT
+    command_wait = 10
+    timeout = 30
+EOL"
+
+# 启动 knockd 服务
+sudo systemctl enable knockd
+sudo systemctl start knockd
+echo "敲门服务配置完成并已启动！"
+
+# 启动 SSH 服务
+sudo systemctl restart sshd
+
 # 下载 SSH 密钥生成脚本并执行
 KEY_SCRIPT_URL="https://raw.githubusercontent.com/yuju520/Script/main/key.sh"
 echo "正在下载 SSH 密钥生成脚本..."
@@ -105,16 +178,13 @@ wget -O key.sh "$KEY_SCRIPT_URL" && chmod +x key.sh
 echo "执行密钥生成脚本..."
 ./key.sh
 
-# 提示用户查看 SSH 密钥
-echo "请确认生成的 SSH 密钥已存储在 ~/.ssh/ 目录下。"
-echo "生成的 SSH 密钥信息请确保已记录和保存。"
-
-# 展示新生成的 SSH 端口和密钥
+# 等待用户确认密钥信息
+echo "SSH 密钥已生成，请确保已记录好密钥信息！"
 echo "SSH 端口: $RANDOM_PORT"
-echo "SSH 密钥已经生成在 ~/.ssh/ 目录中。"
+echo "SSH 密钥已生成在 ~/.ssh/ 目录中。"
 
 # 等待用户确认
-read -p "按 [Enter] 键继续..."
+read -p "请确认已存储 SSH 密钥与端口信息，按 [Enter] 键继续..."
 
 # 更新 SSH 配置以禁止密码登录
 echo >> $SSHD_CONFIG_FILE
@@ -122,16 +192,7 @@ echo "# 禁止密码登录" | sudo tee -a $SSHD_CONFIG_FILE
 echo "PasswordAuthentication no" | sudo tee -a $SSHD_CONFIG_FILE
 echo "ChallengeResponseAuthentication no" | sudo tee -a $SSHD_CONFIG_FILE
 
-# 更新和升级系统
-apt update -y && apt upgrade -y
-
-# 设置时区
-sudo timedatectl set-timezone Asia/Shanghai
-
-# 安装必要的软件包
-apt install sudo curl wget nano vim socat unzip bash iptables ipset fail2ban ufw -y
-
-# 调用优化脚本
+# 安装优化工具
 bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -t
 bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
 
