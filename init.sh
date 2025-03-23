@@ -160,19 +160,24 @@ fi
 # 写入 knockd 配置文件
 echo "正在配置 knockd 服务..."
 sudo bash -c "cat <<EOL > /etc/knockd.conf
+[options]
+    UseSyslog
+    logfile = /var/log/knockd.log
+# 开启SSH访问 - 只允许敲门的IP访问
 [openSSH]
     sequence = $KNOCKD_SEQUENCE_OPEN
-    seq_timeout = 5
-    command = /usr/bin/iptables -A INPUT -p tcp --dport $RANDOM_PORT -j ACCEPT
-    command_wait = 10
-    timeout = 30
-
+    seq_timeout = 15
+    start_command = /sbin/iptables -C INPUT -s %IP% -p tcp --dport $RANDOM_PORT -j ACCEPT || /sbin/iptables -I INPUT 1 -s %IP% -p tcp --dport $RANDOM_PORT -j ACCEPT || /sbin/ip6tables -I INPUT 1 -s %IP% -p tcp --dport $RANDOM_PORT -j ACCEPT || /sbin/ip6tables -C INPUT -s %IP% -p tcp --dport $RANDOM_PORT -j ACCEPT
+    tcpflags    = syn
+    cmd_timeout = 10
+# 关闭所有SSH访问 - 阻止所有IP
 [closeSSH]
     sequence = $KNOCKD_SEQUENCE_CLOSE
-    seq_timeout = 5
-    command = /usr/bin/iptables -D INPUT -p tcp --dport $RANDOM_PORT -j ACCEPT
-    command_wait = 10
-    timeout = 30
+    seq_timeout = 15
+    start_command = /sbin/iptables -C INPUT -p tcp --dport $RANDOM_PORT -j DROP || /sbin/iptables -I INPUT 1 -p tcp --dport $RANDOM_PORT -j DROP && /sbin/iptables -D INPUT -s %IP% -p tcp --dport $RANDOM_PORT -j ACCEPT 2>/dev/null || /sbin/ip6tables -C INPUT -p tcp --dport $RANDOM_PORT -j DROP || /sbin/ip6tables -I INPUT 1 -p tcp --dport $RANDOM_PORT -j DROP && /sbin/ip6tables -D INPUT -s %IP% -p tcp --dport $RANDOM_PORT -j ACCEPT 2>/dev/null
+    tcpflags    = syn
+    cmd_timeout = 10
+    
 EOL"
 
 # 启动 knockd 服务
