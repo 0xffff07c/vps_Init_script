@@ -208,7 +208,28 @@ echo "ChallengeResponseAuthentication no" | sudo tee -a $SSHD_CONFIG_FILE
 
 # 安装优化工具
 bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -t
-bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
+# 检测虚拟机类型
+if command -v systemd-detect-virt &> /dev/null; then
+    VM_TYPE=$(systemd-detect-virt)
+
+    if [[ "$VM_TYPE" == "lxc" ]]; then
+        echo "检测到虚拟化环境为 LXC，脚本不支持运行于该环境。"
+        echo "跳过 Tune 脚本 (-x) 的执行，继续其他操作..."
+    else
+        echo "当前虚拟机类型为：$VM_TYPE"
+        echo "虚拟机类型支持，继续执行 Tune 脚本 (-x)。"
+        # 执行 Tune 脚本
+        bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
+    fi
+else
+    echo "未检测到虚拟化环境，继续执行 Tune 脚本 (-x)。"
+    # 执行 Tune 脚本
+    bash <(wget -qO- https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
+fi
+
+# 继续执行其他脚本项...
+echo "其他脚本操作继续进行..."
+
 
 # 运行优化脚本
 wget https://gist.githubusercontent.com/taurusxin/a9fc3ad039c44ab66fca0320045719b0/raw/3906efed227ee14fc5b4ac8eb4eea8855021ef19/optimize.sh
