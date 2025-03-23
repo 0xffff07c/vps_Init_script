@@ -32,11 +32,12 @@ else
     fi
 fi
 
-# 检测虚拟机类型
-if command -v systemd-detect-virt &> /dev/null; then
-    VM_TYPE=$(systemd-detect-virt)
-else
-    echo "未检测到 systemd-detect-virt 命令，采用其他方式检测。"
+# 提示用户是否进行重装
+read -p "您需要重装系统吗？（输入 y 进行重装，输入 n 跳过）： " REINSTALL_CHOICE
+if [[ "$REINSTALL_CHOICE" == "y" ]]; then
+    echo "开始重装系统..."
+
+    # 检测虚拟机类型
     if grep -E -q 'openvz' /proc/version; then
         VM_TYPE="openvz"
     elif grep -E -q 'lxc' /proc/self/cgroup; then
@@ -44,14 +45,8 @@ else
     else
         VM_TYPE="none"
     fi
-fi
 
-echo "检测到虚拟机类型：$VM_TYPE"
-
-# 提示用户是否进行重装
-read -p "您需要重装系统吗？（输入 y 进行重装，输入 n 跳过）： " REINSTALL_CHOICE
-if [[ "$REINSTALL_CHOICE" == "y" ]]; then
-    echo "开始重装系统..."
+    echo "检测到虚拟机类型：$VM_TYPE"
 
     # 根据虚拟机类型执行相应操作
     if [[ "$VM_TYPE" == "openvz" ]] || [[ "$VM_TYPE" == "lxc" ]]; then
@@ -172,10 +167,42 @@ curl -L https://raw.githubusercontent.com/nezhahq/scripts/main/agent/install.sh 
 chmod +x agent.sh
 env NZ_SERVER=pro.licolnlee.top:443 NZ_TLS=true NZ_CLIENT_SECRET=9wRflUL2H7VPoaDXQiSmGdYQSk9vXMYG ./agent.sh
 
+# 检查用户是否之前安装过哪吒探针
+read -p "您这台 VPS 之前是否安装过哪吒探针？（输入 y 表示是，输入 n 表示否）： " NEZHA_CHOICE
+
+if [[ "$NEZHA_CHOICE" == "y" ]]; then
+    echo "停止哪吒探针服务..."
+    sudo systemctl stop nezha-agent
+    
+    # 输入UUID
+    read -p "请输入您的 VPS UUID： " USER_UUID
+    
+    # 更新 UUID
+    CONFIG_FILE="/opt/nezha/agent/config.yml"
+    if grep -q 'uuid:' "$CONFIG_FILE"; then
+        sudo sed -i "s/uuid: .*/uuid: $USER_UUID/" "$CONFIG_FILE"
+        echo "UUID 更新成功！"
+    else
+        echo "配置文件中未找到 UUID 项。"
+    fi
+    
+    # 启动哪吒探针服务
+    sudo systemctl start nezha-agent
+else
+    echo "未安装哪吒探针，无需处理。"
+fi
+
 # 添加 IP 黑名单
 echo "正在下载和执行 IP 黑名单脚本..."
 curl -sS -O https://raw.githubusercontent.com/woniu336/open_shell/main/ipblocker.sh
 chmod +x ipblocker.sh
 ./ipblocker.sh
 
-echo "所有操作已完成。"
+# 询问是否重启
+read -p "所有操作已完成。您是否需要重启 VPS？（输入 y 进行重启，输入 n 跳过）： " REBOOT_CHOICE
+if [[ "$REBOOT_CHOICE" == "y" ]]; then
+    echo "正在重启 VPS..."
+    sudo reboot
+else
+    echo "请记得后续自行重启您的 VPS。"
+fi
