@@ -105,8 +105,15 @@ wget -O key.sh "$KEY_SCRIPT_URL" && chmod +x key.sh
 echo "执行密钥生成脚本..."
 ./key.sh
 
-# 确认密钥生成并提示用户
-echo "请确认生成的 SSH 密钥已存储在 ~/.ssh/ 目录下，生成的 SSH 密钥信息请确保已记录和保存。"
+# 提示用户查看 SSH 密钥
+echo "请确认生成的 SSH 密钥已存储在 ~/.ssh/ 目录下。"
+echo "生成的 SSH 密钥信息请确保已记录和保存。"
+
+# 展示新生成的 SSH 端口和密钥
+echo "SSH 端口: $RANDOM_PORT"
+echo "SSH 密钥已经生成在 ~/.ssh/ 目录中。"
+
+# 等待用户确认
 read -p "按 [Enter] 键继续..."
 
 # 更新 SSH 配置以禁止密码登录
@@ -174,7 +181,7 @@ if [[ "$NEZHA_CHOICE" == "y" ]]; then
     echo "停止哪吒探针服务..."
     sudo systemctl stop nezha-agent
     
-    # 输入UUID
+    # 输入 UUID
     read -p "请输入您的 VPS UUID： " USER_UUID
     
     # 更新 UUID
