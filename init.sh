@@ -291,9 +291,7 @@ if [[ "$INSTALL_DOCKER_CHOICE" == "y" ]]; then
 
     if [[ "$REGION" == "CN" ]]; then
         echo "检测到中国大陆地区，正在从国内源安装 Docker..."
-        curl https://install.1panel.live/docker-install -o docker-install
-        sudo bash ./docker-install
-        rm -f ./docker-install
+        curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
     else
         echo "检测到国外地区，正在从国外源安装 Docker..."
         wget -qO- get.docker.com | bash
