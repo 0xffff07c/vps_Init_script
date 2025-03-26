@@ -81,7 +81,7 @@ if [[ "$REINSTALL_CHOICE" == "y" ]]; then
         # 执行重装脚本
         curl -O https://gitlab.com/bin456789/reinstall/-/raw/main/reinstall.sh || wget -O reinstall.sh $_
         chmod +x reinstall.sh
-        ./reinstall.sh debian 11
+        ./reinstall.sh debian 12
         if [[ $? -eq 0 ]]; then
             echo "重装脚本执行成功！"
             read -p "是否立即重启 VPS？（输入 y 进行重启，输入 n 取消）： " REBOOT_CHOICE
