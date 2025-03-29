@@ -119,8 +119,37 @@ SSHD_CONFIG_FILE="/etc/ssh/sshd_config"
 echo "正在更新 SSH 配置为端口 $RANDOM_PORT..."
 sudo sed -i "s/^#\?Port 22.*/Port $RANDOM_PORT/g" $SSHD_CONFIG_FILE
 
-# 检查并创建 /var/log/secure 文件
-LOGFILE="/var/log/secure"
+# 配置 Fail2ban 的 jail.local 文件
+echo "正在配置 Fail2ban 以保护 SSH 的端口 $RANDOM_PORT..."
+sudo bash -c "cat <<EOL > /etc/fail2ban/jail.local
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1
+bantime = 86400
+findtime = 86400
+maxretry = 3
+
+[sshd]
+enabled = true
+port = $RANDOM_PORT
+filter = sshd
+action = iptables[name=SSH, port=$RANDOM_PORT, protocol=tcp]
+logpath = /var/log/auth.log
+EOL"
+
+# 重启 SSH 和 Fail2ban 服务
+echo "重启 SSH 服务以应用新的端口 ($RANDOM_PORT)"
+sudo systemctl restart sshd
+echo "重启 Fail2ban 服务以加载新的配置"
+sudo systemctl restart fail2ban
+
+# 检查重新生成的配置状态
+echo "检查 Fail2ban 和 SSH 配置状态..."
+sudo fail2ban-client status
+sudo fail2ban-client status sshd
+echo "随机 SSH 端口 ($RANDOM_PORT) 已成功配置并生效！"
+
+# 检查并创建 /var/log/auth.log 文件
+LOGFILE="/var/log/auth.log"
 if [ ! -f "$LOGFILE" ]; then
     echo "$LOGFILE 文件不存在，正在创建..."
     sudo touch "$LOGFILE"
