@@ -118,7 +118,15 @@ echo "生成的 SSH 端口为：$RANDOM_PORT"
 SSHD_CONFIG_FILE="/etc/ssh/sshd_config"
 echo "正在更新 SSH 配置为端口 $RANDOM_PORT..."
 sudo sed -i "s/^#\?Port 22.*/Port $RANDOM_PORT/g" $SSHD_CONFIG_FILE
-sudo touch /var/log/auth.log
+
+# 检查并创建 /var/log/auth.log 文件
+LOGFILE="/var/log/auth.log"
+if [ ! -f "$LOGFILE" ]; then
+    echo "$LOGFILE 文件不存在，正在创建..."
+    sudo touch "$LOGFILE"
+    sudo chmod 600 "$LOGFILE"
+    echo "$LOGFILE 文件已创建."
+fi
 
 # 配置 Fail2ban 的 jail.local 文件
 echo "正在配置 Fail2ban 以保护 SSH 的端口 $RANDOM_PORT..."
@@ -149,15 +157,6 @@ echo "检查 Fail2ban 和 SSH 配置状态..."
 sudo fail2ban-client status
 sudo fail2ban-client status sshd
 echo "随机 SSH 端口 ($RANDOM_PORT) 已成功配置并生效！"
-
-# 检查并创建 /var/log/auth.log 文件
-LOGFILE="/var/log/auth.log"
-if [ ! -f "$LOGFILE" ]; then
-    echo "$LOGFILE 文件不存在，正在创建..."
-    sudo touch "$LOGFILE"
-    sudo chmod 600 "$LOGFILE"
-    echo "$LOGFILE 文件已创建."
-fi
 
 # 配置 UFW 允许新 SSH 端口
 echo "正在允许 UFW 通过 TCP 访问端口 $RANDOM_PORT..."
