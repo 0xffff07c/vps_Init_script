@@ -140,6 +140,7 @@ EOL"
 echo "重启 SSH 服务以应用新的端口 ($RANDOM_PORT)"
 sudo systemctl restart sshd
 echo "重启 Fail2ban 服务以加载新的配置"
+sudo systemctl enable fail2ban
 sudo systemctl restart fail2ban
 
 # 检查重新生成的配置状态
