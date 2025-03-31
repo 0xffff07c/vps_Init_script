@@ -118,6 +118,7 @@ echo "生成的 SSH 端口为：$RANDOM_PORT"
 SSHD_CONFIG_FILE="/etc/ssh/sshd_config"
 echo "正在更新 SSH 配置为端口 $RANDOM_PORT..."
 sudo sed -i "s/^#\?Port 22.*/Port $RANDOM_PORT/g" $SSHD_CONFIG_FILE
+sudo touch /var/log/auth.log
 
 # 配置 Fail2ban 的 jail.local 文件
 echo "正在配置 Fail2ban 以保护 SSH 的端口 $RANDOM_PORT..."
