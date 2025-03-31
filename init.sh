@@ -154,8 +154,7 @@ sudo systemctl restart fail2ban
 
 # 检查重新生成的配置状态
 echo "检查 Fail2ban 和 SSH 配置状态..."
-sudo fail2ban-client status
-sudo fail2ban-client status sshd
+sudo systemctl status fail2ban
 echo "随机 SSH 端口 ($RANDOM_PORT) 已成功配置并生效！"
 
 # 配置 UFW 允许新 SSH 端口
