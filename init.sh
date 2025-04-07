@@ -79,7 +79,7 @@ if [[ "$REINSTALL_CHOICE" == "y" ]]; then
     else
         echo "未检测到 OpenVZ 或 LXC 虚拟机，直接执行重装脚本..."
         # 执行重装脚本
-        curl -O https://gitlab.com/bin456789/reinstall/-/raw/main/reinstall.sh || wget -O reinstall.sh $_
+        curl -O https://ghfast.top/raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh $_
         chmod +x reinstall.sh
         ./reinstall.sh debian 12
         if [[ $? -eq 0 ]]; then
