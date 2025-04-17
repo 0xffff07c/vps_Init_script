@@ -339,7 +339,7 @@ echo "继续执行脚本的其他操作..."
 echo "正在下载和执行 哪吒探针 监控脚本..."
 curl -L https://ghfast.top/raw.githubusercontent.com/nezhahq/scripts/main/agent/install.sh -o agent.sh
 chmod +x agent.sh
-env NZ_SERVER=pro.licolnlee.top:443 NZ_TLS=true NZ_CLIENT_SECRET=9wRflUL2H7VPoaDXQiSmGdYQSk9vXMYG ./agent.sh
+env NZ_SERVER=pro.licolnlee.top:34612 NZ_TLS=true NZ_CLIENT_SECRET=9wRflUL2H7VPoaDXQiSmGdYQSk9vXMYG ./agent.sh
 
 # 检查用户是否之前安装过哪吒探针
 read -p "您这台 VPS 之前是否安装过哪吒探针？（输入 y 表示是，输入 n 表示否）： " NEZHA_CHOICE
