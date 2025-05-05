@@ -73,13 +73,13 @@ if [[ "$REINSTALL_CHOICE" == "y" ]]; then
     # 根据虚拟机类型执行相应操作
     if [[ "$VM_TYPE" == "openvz" ]] || [[ "$VM_TYPE" == "lxc" ]]; then
         echo "检测到虚拟机类型：$VM_TYPE，正在执行 OsMutation 脚本..."
-        curl -so OsMutation.sh https://ghfast.top/raw.githubusercontent.com/LloydAsp/OsMutation/main/OsMutation.sh
+        curl -so OsMutation.sh https://proxy.licolnlee.top/https://raw.githubusercontent.com/LloydAsp/OsMutation/main/OsMutation.sh
         chmod u+x OsMutation.sh
         ./OsMutation.sh || echo "OsMutation 脚本执行失败，继续执行其他操作..."
     else
         echo "未检测到 OpenVZ 或 LXC 虚拟机，直接执行重装脚本..."
         # 执行重装脚本
-        curl -O https://ghfast.top/raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh $_
+        curl -O https://proxy.licolnlee.top/https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh $_
         chmod +x reinstall.sh
         ./reinstall.sh debian 12
         if [[ $? -eq 0 ]]; then
@@ -231,7 +231,7 @@ echo "敲门服务配置完成并已启动！"
 sudo systemctl restart sshd
 
 # 下载 SSH 密钥生成脚本并执行
-KEY_SCRIPT_URL="https://ghfast.top/raw.githubusercontent.com/yuju520/Script/main/key.sh"
+KEY_SCRIPT_URL="https://proxy.licolnlee.top/https://raw.githubusercontent.com/yuju520/Script/main/key.sh"
 echo "正在下载 SSH 密钥生成脚本..."
 wget -O key.sh "$KEY_SCRIPT_URL" && chmod +x key.sh
 
@@ -254,11 +254,11 @@ echo "PasswordAuthentication no" | sudo tee -a $SSHD_CONFIG_FILE
 echo "ChallengeResponseAuthentication no" | sudo tee -a $SSHD_CONFIG_FILE
 
 # 运行优化脚本
-wget https://ghfast.top/gist.githubusercontent.com/taurusxin/a9fc3ad039c44ab66fca0320045719b0/raw/3906efed227ee14fc5b4ac8eb4eea8855021ef19/optimize.sh
+wget https://proxy.licolnlee.top/https://gist.githubusercontent.com/taurusxin/a9fc3ad039c44ab66fca0320045719b0/raw/3906efed227ee14fc5b4ac8eb4eea8855021ef19/optimize.sh
 sudo bash optimize.sh
 
 # 安装优化工具
-bash <(wget -qO- https://ghfast.top/raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -t
+bash <(wget -qO- https://proxy.licolnlee.top/https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -t
 # 检测虚拟机类型
 if command -v systemd-detect-virt &> /dev/null; then
     VM_TYPE=$(systemd-detect-virt)
@@ -270,12 +270,12 @@ if command -v systemd-detect-virt &> /dev/null; then
         echo "当前虚拟机类型为：$VM_TYPE"
         echo "虚拟机类型支持，继续执行 Tune 脚本 (-x)。"
         # 执行 Tune 脚本
-        bash <(wget -qO- https://ghfast.top/raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
+        bash <(wget -qO- https://proxy.licolnlee.top/https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
     fi
 else
     echo "未检测到虚拟化环境，继续执行 Tune 脚本 (-x)。"
     # 执行 Tune 脚本
-    bash <(wget -qO- https://ghfast.top/raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
+    bash <(wget -qO- https://proxy.licolnlee.top/https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
 fi
 
 # 继续执行其他脚本项...
@@ -288,7 +288,7 @@ echo "其他脚本操作继续进行..."
 # ./tcpx.sh
 
 # 安装交换空间脚本
-wget -O swap.sh https://ghfast.top/raw.githubusercontent.com/yuju520/Script/main/swap.sh
+wget -O swap.sh https://proxy.licolnlee.top/https://raw.githubusercontent.com/yuju520/Script/main/swap.sh
 chmod +x swap.sh
 clear
 ./swap.sh
@@ -337,7 +337,7 @@ echo "继续执行脚本的其他操作..."
 
 # 添加 哪吒探针 监控脚本
 echo "正在下载和执行 哪吒探针 监控脚本..."
-curl -L https://ghfast.top/raw.githubusercontent.com/nezhahq/scripts/main/agent/install.sh -o agent.sh
+curl -L https://proxy.licolnlee.top/https://raw.githubusercontent.com/nezhahq/scripts/main/agent/install.sh -o agent.sh
 chmod +x agent.sh
 env NZ_SERVER=pro.licolnlee.top:34612 NZ_TLS=true NZ_CLIENT_SECRET=9wRflUL2H7VPoaDXQiSmGdYQSk9vXMYG ./agent.sh
 
@@ -382,7 +382,7 @@ fi
 
 # 添加 IP 黑名单
 echo "正在下载和执行 IP 黑名单脚本..."
-curl -sS -O https://ghfast.top/https://raw.githubusercontent.com/0xffff07c/open_shell/refs/heads/main/ipblocker.sh
+curl -sS -O https://proxy.licolnlee.top/https://https://raw.githubusercontent.com/0xffff07c/open_shell/refs/heads/main/ipblocker.sh
 chmod +x ipblocker.sh
 ./ipblocker.sh
 
