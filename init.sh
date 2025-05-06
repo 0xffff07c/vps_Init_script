@@ -382,7 +382,7 @@ fi
 
 # 添加 IP 黑名单
 echo "正在下载和执行 IP 黑名单脚本..."
-curl -sS -O https://proxy.licolnlee.top/https://https://raw.githubusercontent.com/0xffff07c/open_shell/refs/heads/main/ipblocker.sh
+curl -sS -O https://proxy.licolnlee.top/https://raw.githubusercontent.com/0xffff07c/open_shell/refs/heads/main/ipblocker.sh
 chmod +x ipblocker.sh
 ./ipblocker.sh
 
