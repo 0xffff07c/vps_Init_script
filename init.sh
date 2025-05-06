@@ -270,12 +270,12 @@ if command -v systemd-detect-virt &> /dev/null; then
         echo "当前虚拟机类型为：$VM_TYPE"
         echo "虚拟机类型支持，继续执行 Tune 脚本 (-x)。"
         # 执行 Tune 脚本
-        bash <(wget -qO- https://proxy.licolnlee.top/https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
+        bash <(wget -qO- https://proxy.licolnlee.top/https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -3
     fi
 else
     echo "未检测到虚拟化环境，继续执行 Tune 脚本 (-x)。"
     # 执行 Tune 脚本
-    bash <(wget -qO- https://proxy.licolnlee.top/https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -x
+    bash <(wget -qO- https://proxy.licolnlee.top/https://raw.githubusercontent.com/jerry048/Tune/main/tune.sh) -3
 fi
 
 # 继续执行其他脚本项...
